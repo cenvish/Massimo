@@ -1,83 +1,119 @@
-# Massimo Dutti SG Sale Monitor 🛍️
+# Massimo Dutti SG — Discord Bot Monitor 🛍️
 
-A 24/7 bot that monitors massimodutti.com/sg and sends a Discord alert the moment a sale is detected.
-
----
-
-## Deploy to Railway (5 minutes)
-
-### Step 1 — Push to GitHub
-
-1. Create a free account at https://github.com if you don't have one
-2. Create a **new repository** (click + → New repository)
-   - Name it: `md-monitor`
-   - Set to **Private**
-   - Click **Create repository**
-3. Upload these 3 files to the repo:
-   - `monitor.py`
-   - `requirements.txt`
-   - `Dockerfile`
-
-   *(Click "uploading an existing file" on the repo page)*
+Control your watchlist with slash commands directly in Discord:
+- `/add [url] [name]` — Add a product
+- `/remove [name]` — Remove a product  
+- `/list` — See your watchlist
+- `/check` — Instant check right now
+- `/help` — All commands
 
 ---
 
-### Step 2 — Deploy on Railway
+## Part 1 — Create your Discord Bot (5 min)
 
-1. Go to https://railway.app and sign up (free)
-2. Click **New Project** → **Deploy from GitHub repo**
-3. Connect your GitHub account and select `md-monitor`
-4. Railway will auto-detect the Dockerfile and start building
+### 1. Go to Discord Developer Portal
+→ https://discord.com/developers/applications
+
+### 2. Create a new application
+- Click **New Application** (top right)
+- Name it `MD Monitor` → Create
+
+### 3. Create the Bot
+- Click **Bot** in the left sidebar
+- Click **Add Bot** → Yes, do it!
+- Under **Token** → click **Reset Token** → **Copy** and save it somewhere safe
+  - ⚠️ This is your `DISCORD_BOT_TOKEN` — treat it like a password
+
+### 4. Enable required permissions
+Still on the Bot page, scroll down to **Privileged Gateway Intents** and turn on:
+- ✅ Message Content Intent (optional but useful)
+
+### 5. Invite the bot to your server
+- Click **OAuth2** → **URL Generator** in the left sidebar
+- Under **Scopes** tick: `bot` and `applications.commands`
+- Under **Bot Permissions** tick: `Send Messages`, `Embed Links`, `Read Message History`
+- Copy the generated URL at the bottom → open it in your browser → select your server → Authorize
 
 ---
 
-### Step 3 — Add your Discord Webhook
+## Part 2 — Get your Channel ID
 
-1. In your Railway project, click on the service
-2. Go to **Variables** tab
-3. Add these environment variables:
+This is where the bot will post sale alerts.
+
+1. In Discord, go to **Settings** → **Advanced** → turn on **Developer Mode**
+2. Right-click the channel you want alerts in → **Copy Channel ID**
+3. Save this number — it's your `DISCORD_CHANNEL_ID`
+
+---
+
+## Part 3 — Deploy to Railway
+
+### 3a. Push to GitHub
+1. Go to https://github.com → New repository → name it `md-monitor` → Private → Create
+2. Upload these 3 files: `monitor.py`, `requirements.txt`, `Dockerfile`
+
+### 3b. Deploy on Railway
+1. Go to https://railway.app → sign up with GitHub
+2. **New Project** → **Deploy from GitHub repo** → select `md-monitor`
+3. Wait for the build (~1 min)
+
+### 3c. Add a Volume (so your basket saves permanently)
+1. In Railway, click your service → **+ Add** → **Volume**
+2. Set Mount Path to `/data`
+3. Click **Add**
+
+### 3d. Add environment variables
+Go to your service → **Variables** tab → add these:
 
 | Variable | Value |
 |---|---|
-| `DISCORD_WEBHOOK_URL` | `https://discord.com/api/webhooks/YOUR_WEBHOOK_HERE` |
-| `CHECK_INTERVAL_MINUTES` | `30` (or any number you want) |
+| `DISCORD_BOT_TOKEN` | your bot token from Step 1 |
+| `DISCORD_CHANNEL_ID` | your channel ID from Part 2 |
+| `CHECK_INTERVAL_MINUTES` | `30` (or any number) |
 
-4. Railway will automatically restart with the new variables
+Railway will restart automatically.
 
 ---
 
-### Step 4 — Verify it's running
+## Part 4 — Verify it works
 
-- Click **Deployments** tab in Railway → you should see logs like:
-  ```
-  Massimo Dutti SG Sale Monitor starting up
-  Site: https://www.massimodutti.com/sg/
-  Interval: 30 minutes
-  Discord: configured ✓
-  ```
-- You'll also get a **"✅ Monitor is live!"** message in your Discord channel
+1. In your Discord channel you should see: **"✅ Massimo Dutti Monitor is Live!"**
+2. Type `/add` in Discord — you should see the slash command appear
+3. Try: `/add https://www.massimodutti.com/sg/[product-url] My Item`
+
+---
+
+## Using the bot
+
+**Add an item:**
+```
+/add url:https://www.massimodutti.com/sg/slim-fit-suit-... name:Slim Fit Suit
+```
+
+**See your watchlist:**
+```
+/list
+```
+
+**Remove an item:**
+```
+/remove name:Slim Fit Suit
+```
+
+**Check everything right now:**
+```
+/check
+```
+
+---
+
+## How to get a product URL
+1. Go to massimodutti.com/sg
+2. Browse and click the product you want
+3. Copy the full URL from your browser's address bar
+4. Paste it into `/add`
 
 ---
 
 ## Cost
-
-Railway's free **Hobby plan** gives you $5 of credit/month.  
-This bot uses barely any resources — it should run **free indefinitely**.
-
----
-
-## How it works
-
-- Every `CHECK_INTERVAL_MINUTES` minutes, the bot fetches the Massimo Dutti SG homepage
-- It scans the page for sale keywords: `sale`, `% off`, `discount`, `promotion`, `offer`, `clearance`, `up to`, `save`, `promo`, etc.
-- If found → sends a Discord embed with the keywords and a snippet of what the site says
-- Logs every check so you can monitor it in Railway's dashboard
-
----
-
-## Changing the check interval
-
-In Railway → Variables, change `CHECK_INTERVAL_MINUTES` to any number:
-- `15` = every 15 minutes
-- `60` = every hour
-- `1440` = once a day
+Railway free tier = $5/month credit. This bot is very lightweight and should run free indefinitely.
